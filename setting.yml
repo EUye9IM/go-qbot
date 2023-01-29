@@ -1,0 +1,7 @@
+connect:
+  host: localhost
+  port: 8080
+  qq: 0000000000
+  verify_key: 
+  retry_seconds: 10
+  max_retry: 3
