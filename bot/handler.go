@@ -1,9 +1,13 @@
 package bot
 
-type Handler func(interface{})
+import "go-qbot/bot/api"
 
-var handlers []Handler = make([]Handler, 0)
+type Handler[T api.Message] func(T)
 
-func RegistHandlers(h Handler) {
+var (
+	handlers []interface{} = make([]interface{}, 0)
+)
+
+func RegistHandlers[T api.Message](h Handler[T]) {
 	handlers = append(handlers, h)
 }

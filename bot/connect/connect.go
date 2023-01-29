@@ -7,14 +7,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mitchellh/mapstructure"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
 
 type response struct {
-	SyncId string      `json:"syncId"`
-	Data   interface{} `json:"data"`
+	SyncId string                 `json:"syncId"`
+	Data   map[string]interface{} `json:"data"`
 }
 
 type request struct {
@@ -28,8 +27,8 @@ var (
 	ctx     context.Context
 	conn    *websocket.Conn
 	session string
-	chmap   map[int]chan interface{} = make(map[int]chan interface{})
-	next_id int                      = 1
+	chmap   map[int]chan map[string]interface{} = make(map[int]chan map[string]interface{})
+	next_id int                                 = 1
 )
 
 func init() {
@@ -68,6 +67,8 @@ func read() (*response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read failed: %w", err)
 	}
+	//log
+	fmt.Printf("read: %+v\n", *res)
 	return res, nil
 }
 
@@ -76,6 +77,7 @@ func write(req request) error {
 	if err != nil {
 		return fmt.Errorf("write failed: %w", err)
 	}
+	fmt.Printf("write: %+v\n", req)
 	return nil
 }
 
@@ -83,7 +85,7 @@ func Session() string {
 	return session
 }
 
-func RecvData() (interface{}, error) {
+func RecvData() (map[string]interface{}, error) {
 	for {
 		res, err := read()
 		if err != nil {
@@ -91,15 +93,18 @@ func RecvData() (interface{}, error) {
 		}
 		if res.SyncId == "" {
 			// session
-			var conn_data struct {
-				Code    float64
-				Session string
+			s, ok := res.Data["session"]
+			if ok {
+				ss, ok2 := s.(string)
+				if ok2 {
+					session = ss
+				} else {
+					ok = false
+				}
 			}
-			err := mapstructure.Decode(res.Data, &conn_data)
-			if err != nil {
-				return res.Data, fmt.Errorf("recv data failed: unknown data: %w:{{ %#v }}", err, res)
+			if !ok {
+				return nil, fmt.Errorf("recv data failed: unknown data: %#v", res)
 			}
-			session = conn_data.Session
 		} else {
 			syncid, _ := strconv.Atoi(res.SyncId)
 			if syncid < 0 {
@@ -122,14 +127,14 @@ func registChannel() (int, error) {
 		id := (next_id+i+MAX_SYNCID-1)%MAX_SYNCID + 1
 		_, ok := chmap[id]
 		if !ok {
-			chmap[id] = make(chan interface{})
+			chmap[id] = make(chan map[string]interface{})
 			return id, nil
 		}
 	}
 	return 0, fmt.Errorf("regist channel failed: please increase MAX_SYNCID")
 }
 
-func SendCommand(ctx context.Context, command, subcommand string, content interface{}) (interface{}, error) {
+func SendCommand(ctx context.Context, command, subcommand string, content interface{}) (map[string]interface{}, error) {
 	syncid, err := registChannel()
 	if err != nil {
 		return nil, fmt.Errorf("send commant failed: %w", err)

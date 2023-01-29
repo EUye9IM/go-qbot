@@ -1,12 +1,19 @@
-package main
+package drawcard
 
 import (
+	"context"
+	"fmt"
+	"go-qbot/bot"
+	"go-qbot/bot/api"
 	"math/rand"
 	"time"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 func init() {
 	rand.Seed(time.Now().Unix())
+	bot.RegistHandlers(handler)
 }
 
 func draw_card(name string) string {
@@ -56,6 +63,25 @@ func draw_card(name string) string {
 		"【21】世界（The World，XXI）正位:\n完成、成功、完美无缺、连续不断、精神亢奋、拥有毕生奋斗的目标、完成使命、幸运降临、快乐的结束、模范情侣。",
 		"【21】世界（The World，XXI）逆位:\n未完成、失败、准备不足、盲目接受、一时不顺利、半途而废、精神颓废、饱和状态、合谋、态度不够融洽、感情受挫。",
 	}
-	return "来看看 " + name + " 抽到了什么：\n" +
+	return "来看看" + name + "抽到了什么：\n" +
 		(*draw_card_data)[rand.Intn(len(*draw_card_data))]
+}
+
+func handler(gmsg api.GroupMessage) {
+	if len(gmsg.MessageChain) == 2 {
+		var msg api.MessageElementPlain
+		if mapstructure.Decode(gmsg.MessageChain[1], &msg) == nil {
+			if msg.Text == "。draw 单张塔罗牌" {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				fmt.Println(api.SendGroupMessage(
+					ctx,
+					gmsg.Sender.Group.Id,
+					api.NewMessageChain().
+						AddPlain(draw_card(gmsg.Sender.MemberName)).
+						End(),
+				))
+			}
+		}
+	}
 }
