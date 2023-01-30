@@ -3,5 +3,6 @@ connect:
   port: 8080
   qq: 0000000000
   verify_key: 
-  retry_seconds: 10
-  max_retry: 3
+  retry_seconds: 30
+  max_retry: 10
+debug: true

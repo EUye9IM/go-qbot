@@ -1,22 +1,21 @@
 package drawcard
 
 import (
-	"context"
-	"fmt"
-	"go-qbot/bot"
 	"go-qbot/bot/api"
+	"go-qbot/bot/logging"
+	"go-qbot/modules/responsor"
 	"math/rand"
 	"time"
-
-	"github.com/mitchellh/mapstructure"
 )
+
+var logger *logging.Logs
 
 func init() {
 	rand.Seed(time.Now().Unix())
-	bot.RegistHandlers(handler)
+	logger = responsor.RegistCommand("draw", handler)
 }
 
-func draw_card(name string) string {
+func draw_tarot(name string) string {
 	draw_card_data := &[]string{
 		"【0】愚者（The Fool，0）正位:\n憧憬自然的地方、毫无目的地前行、喜欢尝试挑战新鲜事物、四处流浪。美好的梦想。",
 		"【0】愚者（The Fool，0）逆位:\n冒险的行动，追求可能性，重视梦想，无视物质的损失，离开家园，过于信赖别人，为出外旅行而烦恼。心情空虚、轻率的恋情、无法长久持续的融洽感、不安的爱情的旅程、对婚姻感到束缚、彼此忽冷忽热、不顾众人反对坠入爱河、为恋人的负心所伤、感情不专一。",
@@ -67,21 +66,13 @@ func draw_card(name string) string {
 		(*draw_card_data)[rand.Intn(len(*draw_card_data))]
 }
 
-func handler(gmsg api.GroupMessage) {
-	if len(gmsg.MessageChain) == 2 {
-		var msg api.MessageElementPlain
-		if mapstructure.Decode(gmsg.MessageChain[1], &msg) == nil {
-			if msg.Text == "。draw 单张塔罗牌" {
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
-				fmt.Println(api.SendGroupMessage(
-					ctx,
-					gmsg.Sender.Group.Id,
-					api.NewMessageChain().
-						AddPlain(draw_card(gmsg.Sender.MemberName)).
-						End(),
-				))
-			}
-		}
+func handler(argv []string, gmsg api.GroupMessage) (out_msg *api.MessageChain, enable bool) {
+	enable = true
+	out_msg = api.NewMessageChain()
+	if len(argv) > 0 && argv[0] != "单张塔罗牌" {
+		out_msg.AddPlain("没有这个卡组")
+		return
 	}
+	out_msg.AddPlain(draw_tarot(gmsg.Sender.MemberName))
+	return
 }

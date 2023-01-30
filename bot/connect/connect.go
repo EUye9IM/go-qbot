@@ -2,10 +2,13 @@ package connect
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"go-qbot/bot/logging"
 	"go-qbot/config"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
@@ -24,11 +27,14 @@ type request struct {
 }
 
 var (
-	ctx     context.Context
-	conn    *websocket.Conn
-	session string
-	chmap   map[int]chan map[string]interface{} = make(map[int]chan map[string]interface{})
-	next_id int                                 = 1
+	ctx      context.Context
+	conn     *websocket.Conn
+	session  string
+	mapmutex sync.RWMutex
+	chmap    map[int]chan map[string]interface{} = make(map[int]chan map[string]interface{})
+	next_id  int                                 = 1
+
+	logger = logging.New("Connect")
 )
 
 func init() {
@@ -67,8 +73,7 @@ func read() (*response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read failed: %w", err)
 	}
-	//log
-	fmt.Printf("read: %+v\n", *res)
+	logger.Debugf("read：%+v\n", *res)
 	return res, nil
 }
 
@@ -77,7 +82,8 @@ func write(req request) error {
 	if err != nil {
 		return fmt.Errorf("write failed: %w", err)
 	}
-	fmt.Printf("write: %+v\n", req)
+	b, _ := json.Marshal(req)
+	logger.Debugf("write：%v\n", string(b))
 	return nil
 }
 
@@ -110,7 +116,9 @@ func RecvData() (map[string]interface{}, error) {
 			if syncid < 0 {
 				return res.Data, nil
 			} else {
+				mapmutex.RLock()
 				ch, ok := chmap[syncid]
+				mapmutex.RUnlock()
 				if ok {
 					ch <- res.Data
 				} else {
@@ -122,6 +130,8 @@ func RecvData() (map[string]interface{}, error) {
 }
 
 func registChannel() (int, error) {
+	mapmutex.Lock()
+	defer mapmutex.Unlock()
 	const MAX_SYNCID = 1000
 	for i := 0; i < MAX_SYNCID; i++ {
 		id := (next_id+i+MAX_SYNCID-1)%MAX_SYNCID + 1
@@ -132,6 +142,11 @@ func registChannel() (int, error) {
 		}
 	}
 	return 0, fmt.Errorf("regist channel failed: please increase MAX_SYNCID")
+}
+func cancelChannel(syncid int) {
+	mapmutex.Lock()
+	defer mapmutex.Unlock()
+	delete(chmap, syncid)
 }
 
 func SendCommand(ctx context.Context, command, subcommand string, content interface{}) (map[string]interface{}, error) {
@@ -151,9 +166,12 @@ func SendCommand(ctx context.Context, command, subcommand string, content interf
 		return nil, fmt.Errorf("send commant failed: %w", err)
 	}
 
+	mapmutex.RLock()
+	ch := chmap[syncid]
+	mapmutex.RUnlock()
 	select {
-	case data := <-chmap[syncid]:
-		delete(chmap, syncid)
+	case data := <-ch:
+		cancelChannel(syncid)
 		return data, nil
 	case <-ctx.Done():
 	}
