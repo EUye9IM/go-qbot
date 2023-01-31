@@ -59,16 +59,19 @@ func handler(gmsg api.GroupMessage) {
 									)
 								if err != nil {
 									logger.Debugln(err)
-								} else if resp["messageId"].(float64) <= 0 {
-									ctx2, cancel := context.WithTimeout(context.Background(), TIMEOUT)
-									defer cancel()
-									api.SendGroupMessage(
-										ctx2,
-										gmsg.Sender.Group.Id,
-										api.NewMessageChain().
-											AddPlain(fmt.Sprintf("被吞惹\n%v", msg_chain.ToJsonList())).
-											ToJsonList(),
-									)
+								} else if resp["messageId"] != nil {
+									id, _ := resp["messageId"].(float64)
+									if id < 0 {
+										ctx2, cancel := context.WithTimeout(context.Background(), TIMEOUT)
+										defer cancel()
+										api.SendGroupMessage(
+											ctx2,
+											gmsg.Sender.Group.Id,
+											api.NewMessageChain().
+												AddPlain(fmt.Sprintf("被吞惹\n%v", msg_chain.ToJsonList())).
+												ToJsonList(),
+										)
+									}
 								}
 							}
 						}
