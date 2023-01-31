@@ -6,6 +6,7 @@ import (
 	_ "go-qbot/modules/responsor"
 	_ "go-qbot/modules/responsor/drawcard"
 	_ "go-qbot/modules/responsor/eroimg"
+	_ "go-qbot/modules/responsor/sick"
 )
 
 func main() {

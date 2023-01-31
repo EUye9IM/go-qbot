@@ -47,7 +47,14 @@ func handler(gmsg api.GroupMessage) {
 					if len(commandline) > 0 {
 						r := responsors[commandline[0]]
 						if r != nil {
-							msg_chain, ena := r(commandline[1:], gmsg)
+							msg_chain, ena := func() (out_msg *api.MessageChain, enable bool) {
+								defer func() {
+									if err := recover(); err != nil {
+										logger.Infoln("responsor panic: ", err)
+									}
+								}()
+								return r(commandline[1:], gmsg)
+							}()
 							if ena {
 								ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
 								defer cancel()

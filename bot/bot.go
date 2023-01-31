@@ -33,7 +33,14 @@ func classify(data map[string]interface{}) error {
 		for _, h := range handlers {
 			hfunc := h.(Handler[api.GroupMessage])
 			if hfunc != nil {
-				go hfunc(msg)
+				go func() {
+					defer func() {
+						if err := recover(); err != nil {
+							logger.Infoln("handler panic: ", err)
+						}
+					}()
+					hfunc(msg)
+				}()
 			}
 		}
 	default:

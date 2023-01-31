@@ -7,10 +7,8 @@ import (
 	"go-qbot/bot/logging"
 	"go-qbot/modules/responsor"
 	"io"
-	"math/rand"
 	"net/http"
 	"net/url"
-	"time"
 )
 
 var logger *logging.Logs
@@ -18,7 +16,6 @@ var logger *logging.Logs
 const proxy = "i.pixiv.cat"
 
 func init() {
-	rand.Seed(time.Now().Unix())
 	logger = responsor.RegistCommand("ero", handler)
 }
 
