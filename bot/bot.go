@@ -14,7 +14,7 @@ import (
 var logger = logging.New("Bot")
 
 func Modlog(name string) *logging.Logs {
-	return logging.New("Modules: " + "name")
+	return logging.New("Modules: " + name)
 }
 
 func classify(data map[string]interface{}) error {

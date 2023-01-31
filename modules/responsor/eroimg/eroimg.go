@@ -21,7 +21,7 @@ func init() {
 }
 
 func getdata(apiurl string) string {
-	u := "https://api.lolicon.app/setu/v2?proxy=" + url.QueryEscape("i.pixiv.cat/{{path}}")
+	u := "https://api.lolicon.app/setu/v2?size=regular&proxy=" + url.QueryEscape("i.pixiv.cat/{{path}}")
 	logger.Debugln(u)
 	resp, err := http.Get(u)
 	if err != nil {
@@ -43,7 +43,7 @@ type res struct {
 		Uid   int
 		Title string
 		Urls  struct {
-			Original string
+			Regular string
 		}
 	}
 }
@@ -72,7 +72,7 @@ func handler(argv []string, gmsg api.GroupMessage) (out_msg *api.MessageChain, e
 		return
 	}
 	for _, v := range r.Data {
-		out_msg.AddImage("", v.Urls.Original, "", nil).
+		out_msg.AddImage("", v.Urls.Regular, "", nil).
 			AddPlain(fmt.Sprintf("%v\npid_p_uid\n%v_%v_%v", v.Title, v.Pid, v.P, v.Uid))
 	}
 
