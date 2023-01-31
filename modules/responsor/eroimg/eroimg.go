@@ -21,8 +21,7 @@ func init() {
 }
 
 func getdata(apiurl string) string {
-	apiurl += "proxy=i.pixiv.cat/{{path}}"
-	u := "https://api.lolicon.app/setu/v2?" + url.QueryEscape(apiurl)
+	u := "https://api.lolicon.app/setu/v2?proxy=" + url.QueryEscape("i.pixiv.cat/{{path}}")
 	logger.Debugln(u)
 	resp, err := http.Get(u)
 	if err != nil {
@@ -56,7 +55,7 @@ func handler(argv []string, gmsg api.GroupMessage) (out_msg *api.MessageChain, e
 
 	var apiurl string
 	for i := 0; i < len(argv) && i < 3; i++ {
-		apiurl += "&tag=" + argv[i]
+		apiurl += "&tag=" + url.QueryEscape(argv[i])
 	}
 
 	msg := getdata(apiurl)

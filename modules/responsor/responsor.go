@@ -19,7 +19,7 @@ var (
 	mutex      sync.Mutex
 )
 
-const TIMEOUT = time.Duration(5) * time.Second
+const TIMEOUT = time.Duration(20) * time.Second
 
 type Responsor func(argv []string, gmsg api.GroupMessage) (out_msg *api.MessageChain, enable bool)
 
