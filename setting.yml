@@ -7,4 +7,4 @@ connect:
   max_retry: 10
 debug: true
 modules:
-  saucenao: {}
+  saucenao:

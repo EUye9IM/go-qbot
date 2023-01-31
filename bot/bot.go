@@ -83,5 +83,5 @@ func Run() {
 }
 
 func GetModConf(name string) interface{} {
-	return config.Conf().Modules["name"]
+	return config.Conf().Modules[name]
 }

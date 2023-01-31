@@ -12,10 +12,11 @@ import (
 )
 
 //var logger *logging.Logs
-var token, _ = bot.GetModConf("saucenao").(string)
+var token string
 
 func init() {
 	responsor.RegistCommand("search", handler)
+	token, _ = bot.GetModConf("saucenao").(string)
 }
 
 type response struct {
