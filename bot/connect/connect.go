@@ -138,6 +138,7 @@ func registChannel() (int, error) {
 		_, ok := chmap[id]
 		if !ok {
 			chmap[id] = make(chan map[string]interface{})
+			next_id = id + 1
 			return id, nil
 		}
 	}

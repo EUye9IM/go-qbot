@@ -15,13 +15,15 @@ import (
 
 var logger *logging.Logs
 
+const proxy = "i.pixiv.cat"
+
 func init() {
 	rand.Seed(time.Now().Unix())
 	logger = responsor.RegistCommand("ero", handler)
 }
 
 func getdata(apiurl string) string {
-	u := "https://api.lolicon.app/setu/v2?size=regular&proxy=" + url.QueryEscape("i.pixiv.cat/{{path}}")
+	u := "https://api.lolicon.app/setu/v2?size=regular&proxy=" + url.QueryEscape(proxy+"/{{path}}") + apiurl
 	logger.Debugln(u)
 	resp, err := http.Get(u)
 	if err != nil {
