@@ -81,3 +81,7 @@ func Run() {
 		time.Sleep(time.Duration(conf.Connect.Retry_seconds) * time.Second)
 	}
 }
+
+func GetModConf(name string) interface{} {
+	return config.Conf().Modules["name"]
+}

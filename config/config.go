@@ -17,6 +17,7 @@ type ConfigConnect struct {
 type Config struct {
 	Connect ConfigConnect
 	Debug   bool
+	Modules map[string]interface{}
 }
 
 var config Config
